@@ -12,9 +12,11 @@ development process was exciting and insightful. Additionally Phaser game engine
 if you are planning to build anything similar.
 
 ## Install
+If you would like to host the game locally just run __
+`npm start`
 
 ## References
-[1] https://nodejs.org/en/
-[2] https://www.typescriptlang.org/
-[3] http://phaser.io/
-[4] https://blockchain.info/api/api_websocket
+[1] https://nodejs.org/en/ __
+[2] https://www.typescriptlang.org/ __
+[3] http://phaser.io/ __
+[4] https://blockchain.info/api/api_websocket __

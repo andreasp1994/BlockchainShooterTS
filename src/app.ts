@@ -12,4 +12,5 @@ TODO:
 + enchance TX visualisation with colors
 + link TX inputs and outputs somehow in visualisation, not just amount
 + add sprite animation
++ add asteroid radar
 */
