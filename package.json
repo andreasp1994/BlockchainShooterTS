@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "npm install;typings install;./node_modules/typescript/bin//tsc;http-server",
+    "start": "npm install;typings install;./node_modules/typescript/bin//tsc;./node_modules/webpack/bin/webpack.js --config webpack.config.js;http-server",
     "server": "http-server"
   },
   "author": "Antreas Pogiatzis",

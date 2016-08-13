@@ -45,7 +45,7 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var btcTXShooterGame_1 = __webpack_require__(5);
+	var btcTXShooterGame_1 = __webpack_require__(1);
 	window.onload = function () {
 	    var game = new btcTXShooterGame_1.BtcTXShooterGame();
 	};
@@ -57,6 +57,7 @@
 	+ enchance TX visualisation with colors
 	+ link TX inputs and outputs somehow in visualisation, not just amount
 	+ add sprite animation
+	+ add asteroid radar
 	*/ 
 
 
@@ -65,129 +66,10 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
+	var asteroidGenerator_1 = __webpack_require__(2);
 	var asteroid_1 = __webpack_require__(3);
-	var gameConfig_1 = __webpack_require__(2);
-	/*
-	This class is repsonsible for creating asteroids based on the bitcoin blockchain transactions
-	*/
-	var AsteroidGenerator = (function () {
-	    function AsteroidGenerator(game) {
-	        var _this = this;
-	        this.divideAsteroid = function (asteroid, bullet) {
-	            bullet.kill();
-	            asteroid.kill(); //Maybe I have remove the objecct from group as well?? Performance implications
-	            //Divide asteroid into 2 smaller pieces
-	            if (asteroid.size != asteroid_1.Asteroid.ASTEROID_TINY) {
-	                _this.createAsteroid(asteroid.size - 1, asteroid.x, asteroid.y);
-	                _this.createAsteroid(asteroid.size - 1, asteroid.x, asteroid.y);
-	            }
-	        };
-	        this._game = game;
-	        this._group = new Phaser.Group(this._game);
-	    }
-	    AsteroidGenerator.prototype.createAsteroid = function (size, x, y) {
-	        var point = this.getRandomCoordinates();
-	        var asteroid;
-	        if (x && y) {
-	            asteroid = this._game.add.sprite(x, y, AsteroidGenerator.asteroidAssetKey[size]);
-	        }
-	        else {
-	            asteroid = this._game.add.sprite(point.x, point.y, AsteroidGenerator.asteroidAssetKey[size]);
-	        }
-	        asteroid.size = size;
-	        this._game.physics.enable(asteroid, Phaser.Physics.ARCADE);
-	        asteroid.body.velocity = this.getRandomVelocity();
-	        asteroid.body.drag.set(20 * size);
-	        asteroid.body.minVelocity = 40; // Need fix
-	        this._group.add(asteroid);
-	    };
-	    AsteroidGenerator.prototype.getRandomVelocity = function () {
-	        var vX = this._game.rnd.integerInRange(AsteroidGenerator.MIN_VELOCITY, AsteroidGenerator.MAX_VELOCITY);
-	        var vY = this._game.rnd.integerInRange(AsteroidGenerator.MIN_VELOCITY, AsteroidGenerator.MAX_VELOCITY);
-	        return new Phaser.Point(vX, vY);
-	    };
-	    AsteroidGenerator.prototype.getRandomCoordinates = function () {
-	        return new Phaser.Point(this._game.rnd.integerInRange(0, gameConfig_1.GameConfig.WORLD_WIDTH), this._game.rnd.integerInRange(0, gameConfig_1.GameConfig.WORLD_HEIGHT));
-	    };
-	    Object.defineProperty(AsteroidGenerator.prototype, "group", {
-	        get: function () {
-	            return this._group;
-	        },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    AsteroidGenerator.MAX_VELOCITY = 200;
-	    AsteroidGenerator.MIN_VELOCITY = -AsteroidGenerator.MAX_VELOCITY;
-	    AsteroidGenerator.asteroidAssetKey = ["ast_tiny", "ast_small", "ast_medium", "ast_large"];
-	    return AsteroidGenerator;
-	}());
-	exports.AsteroidGenerator = AsteroidGenerator;
-
-
-/***/ },
-/* 2 */
-/***/ function(module, exports) {
-
-	"use strict";
-	var GameConfig = (function () {
-	    function GameConfig() {
-	    }
-	    GameConfig.BITCOIN_BLOCKCHAIN_SOCKET_API_URL = "wss://ws.blockchain.info/inv";
-	    GameConfig.BITCOIN_BLOCKCHAIN_SOCKET_SUBSCRIBE_TO_TX = '{"op":"unconfirmed_sub"}';
-	    GameConfig.SPACECRAFT_INITIAL_HEALTH = 100;
-	    GameConfig.GAME_WIDTH = window.innerWidth;
-	    GameConfig.GAME_HEIGHT = window.innerHeight - 54;
-	    GameConfig.WORLD_WIDTH = 5000;
-	    GameConfig.WORLD_HEIGHT = 5000;
-	    return GameConfig;
-	}());
-	exports.GameConfig = GameConfig;
-
-
-/***/ },
-/* 3 */
-/***/ function(module, exports) {
-
-	"use strict";
-	var __extends = (this && this.__extends) || function (d, b) {
-	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-	    function __() { this.constructor = d; }
-	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	};
-	var Asteroid = (function (_super) {
-	    __extends(Asteroid, _super);
-	    function Asteroid() {
-	        _super.apply(this, arguments);
-	    }
-	    Object.defineProperty(Asteroid.prototype, "size", {
-	        get: function () {
-	            return this._size;
-	        },
-	        set: function (s) {
-	            this._size = s;
-	        },
-	        enumerable: true,
-	        configurable: true
-	    });
-	    Asteroid.ASTEROID_TINY = 0;
-	    Asteroid.ASTEROID_SMALL = 1;
-	    Asteroid.ASTEROID_MEDIUM = 2;
-	    Asteroid.ASTEROID_LARGE = 3;
-	    return Asteroid;
-	}(Phaser.Sprite));
-	exports.Asteroid = Asteroid;
-
-
-/***/ },
-/* 4 */,
-/* 5 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	var asteroidGenerator_1 = __webpack_require__(1);
-	var asteroid_1 = __webpack_require__(3);
-	var gameConfig_1 = __webpack_require__(2);
-	var blockchainFeed_1 = __webpack_require__(6);
+	var gameConfig_1 = __webpack_require__(4);
+	var blockchainFeed_1 = __webpack_require__(5);
 	var BtcTXShooterGame = (function () {
 	    function BtcTXShooterGame() {
 	        this.game = new Phaser.Game(gameConfig_1.GameConfig.GAME_WIDTH, gameConfig_1.GameConfig.GAME_HEIGHT, Phaser.AUTO, 'content', {
@@ -288,11 +170,129 @@
 
 
 /***/ },
-/* 6 */
+/* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var gameConfig_1 = __webpack_require__(2);
+	var asteroid_1 = __webpack_require__(3);
+	var gameConfig_1 = __webpack_require__(4);
+	/*
+	This class is repsonsible for creating asteroids based on the bitcoin blockchain transactions
+	*/
+	var AsteroidGenerator = (function () {
+	    function AsteroidGenerator(game) {
+	        var _this = this;
+	        this.divideAsteroid = function (asteroid, bullet) {
+	            bullet.kill();
+	            asteroid.kill(); //Maybe I have remove the objecct from group as well?? Performance implications
+	            //Divide asteroid into 2 smaller pieces
+	            if (asteroid.size != asteroid_1.Asteroid.ASTEROID_TINY) {
+	                _this.createAsteroid(asteroid.size - 1, asteroid.x, asteroid.y);
+	                _this.createAsteroid(asteroid.size - 1, asteroid.x, asteroid.y);
+	            }
+	        };
+	        this._game = game;
+	        this._group = new Phaser.Group(this._game);
+	    }
+	    AsteroidGenerator.prototype.createAsteroid = function (size, x, y) {
+	        var point = this.getRandomCoordinates();
+	        var asteroid;
+	        if (x && y) {
+	            asteroid = this._game.add.sprite(x, y, AsteroidGenerator.asteroidAssetKey[size]);
+	        }
+	        else {
+	            asteroid = this._game.add.sprite(point.x, point.y, AsteroidGenerator.asteroidAssetKey[size]);
+	        }
+	        asteroid.size = size;
+	        this._game.physics.enable(asteroid, Phaser.Physics.ARCADE);
+	        asteroid.body.velocity = this.getRandomVelocity();
+	        asteroid.body.drag.set(20 * size);
+	        asteroid.body.minVelocity = 40; // Need fix
+	        this._group.add(asteroid);
+	    };
+	    AsteroidGenerator.prototype.getRandomVelocity = function () {
+	        var vX = this._game.rnd.integerInRange(AsteroidGenerator.MIN_VELOCITY, AsteroidGenerator.MAX_VELOCITY);
+	        var vY = this._game.rnd.integerInRange(AsteroidGenerator.MIN_VELOCITY, AsteroidGenerator.MAX_VELOCITY);
+	        return new Phaser.Point(vX, vY);
+	    };
+	    AsteroidGenerator.prototype.getRandomCoordinates = function () {
+	        return new Phaser.Point(this._game.rnd.integerInRange(0, gameConfig_1.GameConfig.WORLD_WIDTH), this._game.rnd.integerInRange(0, gameConfig_1.GameConfig.WORLD_HEIGHT));
+	    };
+	    Object.defineProperty(AsteroidGenerator.prototype, "group", {
+	        get: function () {
+	            return this._group;
+	        },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    AsteroidGenerator.MAX_VELOCITY = 200;
+	    AsteroidGenerator.MIN_VELOCITY = -AsteroidGenerator.MAX_VELOCITY;
+	    AsteroidGenerator.asteroidAssetKey = ["ast_tiny", "ast_small", "ast_medium", "ast_large"];
+	    return AsteroidGenerator;
+	}());
+	exports.AsteroidGenerator = AsteroidGenerator;
+
+
+/***/ },
+/* 3 */
+/***/ function(module, exports) {
+
+	"use strict";
+	var __extends = (this && this.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	var Asteroid = (function (_super) {
+	    __extends(Asteroid, _super);
+	    function Asteroid() {
+	        _super.apply(this, arguments);
+	    }
+	    Object.defineProperty(Asteroid.prototype, "size", {
+	        get: function () {
+	            return this._size;
+	        },
+	        set: function (s) {
+	            this._size = s;
+	        },
+	        enumerable: true,
+	        configurable: true
+	    });
+	    Asteroid.ASTEROID_TINY = 0;
+	    Asteroid.ASTEROID_SMALL = 1;
+	    Asteroid.ASTEROID_MEDIUM = 2;
+	    Asteroid.ASTEROID_LARGE = 3;
+	    return Asteroid;
+	}(Phaser.Sprite));
+	exports.Asteroid = Asteroid;
+
+
+/***/ },
+/* 4 */
+/***/ function(module, exports) {
+
+	"use strict";
+	var GameConfig = (function () {
+	    function GameConfig() {
+	    }
+	    GameConfig.BITCOIN_BLOCKCHAIN_SOCKET_API_URL = "wss://ws.blockchain.info/inv";
+	    GameConfig.BITCOIN_BLOCKCHAIN_SOCKET_SUBSCRIBE_TO_TX = '{"op":"unconfirmed_sub"}';
+	    GameConfig.SPACECRAFT_INITIAL_HEALTH = 100;
+	    GameConfig.GAME_WIDTH = window.innerWidth;
+	    GameConfig.GAME_HEIGHT = window.innerHeight - 54;
+	    GameConfig.WORLD_WIDTH = 5000;
+	    GameConfig.WORLD_HEIGHT = 5000;
+	    return GameConfig;
+	}());
+	exports.GameConfig = GameConfig;
+
+
+/***/ },
+/* 5 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var gameConfig_1 = __webpack_require__(4);
 	var BlockchainFeed = (function () {
 	    function BlockchainFeed(listener) {
 	        this.listener = listener;
