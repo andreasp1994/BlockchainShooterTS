@@ -1,4 +1,4 @@
-### Bitcoin Blockchain Transcaction asteroid-like shooter
+# Bitcoin Blockchain Transcaction asteroid-like shooter
 
 ## Description
 This project started as a visualisation of Bitcoin's blockchain but in the end I thought that it would be an interesting idea to attempt to gamify
