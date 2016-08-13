@@ -1,13 +1,16 @@
 import { AsteroidGenerator } from "./asteroidGenerator"
 import { Asteroid } from "./asteroid"
 import { GameConfig } from "./gameConfig"
+import { OnTXCreatedListener } from "./onTXCreatedListener"
+import { BlockchainFeed } from "./blockchainFeed"
 
-export class SimpleGame {
+export class SimpleGame implements OnTXCreatedListener{
     game: Phaser.Game;
     spacecraftSpite: Phaser.Sprite;
     weapon: Phaser.Weapon
 
     private asteroidGenerator : AsteroidGenerator;
+    private blockchainTXFeed : BlockchainFeed;
 
     constructor() {
         this.game =new Phaser.Game(GameConfig.GAME_WIDTH, GameConfig.GAME_HEIGHT, Phaser.AUTO, 'content',
@@ -16,10 +19,14 @@ export class SimpleGame {
                 preload: this.preload, 
                 update: this.update,
                 render: this.render,
+                onTXCreated : this.onTXCreated      // Have to register the method in game state
             });
     }
 
     preload() {
+        //Socket TX feed
+        this.blockchainTXFeed = new BlockchainFeed(this);
+
         this.game.load.image("spacecraft", "assets/ShipB.png");
         this.game.load.image("bullet", "assets/BulletB.png");
         this.game.load.image("space", "assets/space.jpg");
@@ -83,24 +90,33 @@ export class SimpleGame {
             this.weapon.fire(this.spacecraftSpite);
         }
 
+        //Wrap world around sprites
         this.game.world.wrap(this.spacecraftSpite, 0, true);
-
+        this.asteroidGenerator.group.forEach(this.game.world.wrap, this.game.world, true, 0, true);
+        
         //Bullets with asteroids collision
-        this.game.physics.arcade.collide(this.asteroidGenerator.group, this.weapon.bullets, this.asteroidGenerator.divideAsteroid, null, this)
+        this.game.physics.arcade.collide(this.asteroidGenerator.group, this.weapon.bullets, this.asteroidGenerator.divideAsteroid, null, this);
 
         //Spacecraft with asteroid collision
+        this.game.physics.arcade.collide(this.spacecraftSpite, this.asteroidGenerator.group, null, this.damageSpacecraft, this);
+        
+        //Asteroids with asteroids collision
+        this.game.physics.arcade.collide(this.asteroidGenerator.group);
     }
 
     render() {
-        this.game.debug.spriteInfo(this.spacecraftSpite, 32, 450);
+        this.game.debug.spriteInfo(this.spacecraftSpite, 32, 650);
     }
 
-    private damageSpacecraft(spacecraft : Phaser.Sprite, asteroid : Asteroid ) : void {
+    private damageSpacecraft(spacecraft : Phaser.Sprite, asteroid : Asteroid ) : boolean {
         spacecraft.health -= 5*asteroid.size;
-
+        return true;
     } 
 
-
+    public onTXCreated(satoshiAmount : number) : void {
+        //create asteroid
+        this.asteroidGenerator.createAsteroid(Asteroid.ASTEROID_TINY);
+    }
 }
 
 window.onload = () => {

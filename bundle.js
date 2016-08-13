@@ -48,6 +48,7 @@
 	var asteroidGenerator_1 = __webpack_require__(1);
 	var asteroid_1 = __webpack_require__(3);
 	var gameConfig_1 = __webpack_require__(2);
+	var blockchainFeed_1 = __webpack_require__(4);
 	var SimpleGame = (function () {
 	    function SimpleGame() {
 	        this.game = new Phaser.Game(gameConfig_1.GameConfig.GAME_WIDTH, gameConfig_1.GameConfig.GAME_HEIGHT, Phaser.AUTO, 'content', {
@@ -55,9 +56,12 @@
 	            preload: this.preload,
 	            update: this.update,
 	            render: this.render,
+	            onTXCreated: this.onTXCreated // Have to register the method in game state
 	        });
 	    }
 	    SimpleGame.prototype.preload = function () {
+	        //Socket TX feed
+	        this.blockchainTXFeed = new blockchainFeed_1.BlockchainFeed(this);
 	        this.game.load.image("spacecraft", "assets/ShipB.png");
 	        this.game.load.image("bullet", "assets/BulletB.png");
 	        this.game.load.image("space", "assets/space.jpg");
@@ -107,16 +111,26 @@
 	        if (this.game.input.activePointer.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
 	            this.weapon.fire(this.spacecraftSpite);
 	        }
+	        //Wrap world around sprites
 	        this.game.world.wrap(this.spacecraftSpite, 0, true);
+	        this.asteroidGenerator.group.forEach(this.game.world.wrap, this.game.world, true, 0, true);
 	        //Bullets with asteroids collision
 	        this.game.physics.arcade.collide(this.asteroidGenerator.group, this.weapon.bullets, this.asteroidGenerator.divideAsteroid, null, this);
 	        //Spacecraft with asteroid collision
+	        this.game.physics.arcade.collide(this.spacecraftSpite, this.asteroidGenerator.group, null, this.damageSpacecraft, this);
+	        //Asteroids with asteroids collision
+	        this.game.physics.arcade.collide(this.asteroidGenerator.group);
 	    };
 	    SimpleGame.prototype.render = function () {
-	        this.game.debug.spriteInfo(this.spacecraftSpite, 32, 450);
+	        this.game.debug.spriteInfo(this.spacecraftSpite, 32, 650);
 	    };
 	    SimpleGame.prototype.damageSpacecraft = function (spacecraft, asteroid) {
 	        spacecraft.health -= 5 * asteroid.size;
+	        return true;
+	    };
+	    SimpleGame.prototype.onTXCreated = function (satoshiAmount) {
+	        //create asteroid
+	        this.asteroidGenerator.createAsteroid(asteroid_1.Asteroid.ASTEROID_TINY);
 	    };
 	    return SimpleGame;
 	}());
@@ -131,7 +145,6 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var gameConfig_1 = __webpack_require__(2);
 	var asteroid_1 = __webpack_require__(3);
 	/*
 	This class is repsonsible for creating asteroids based on the bitcoin blockchain transactions
@@ -141,40 +154,30 @@
 	        var _this = this;
 	        this.divideAsteroid = function (asteroid, bullet) {
 	            bullet.kill();
-	            asteroid.kill();
+	            asteroid.kill(); //Maybe I have remove the objecct from group as well?? Performance implications
 	            //Divide asteroid into 2 smaller pieces
 	            if (asteroid.size != asteroid_1.Asteroid.ASTEROID_TINY) {
-	                var one_half = _this._game.add.sprite(asteroid.x, asteroid.y, AsteroidGenerator.asteroidAssetKey[asteroid.size - 1]);
-	                var other_half = _this._game.add.sprite(asteroid.x, asteroid.y, AsteroidGenerator.asteroidAssetKey[asteroid.size - 1]);
-	                _this._game.physics.enable(one_half, Phaser.Physics.ARCADE);
-	                _this._game.physics.enable(other_half, Phaser.Physics.ARCADE);
-	                one_half.body.velocity = _this.getRandomVelocity();
-	                other_half.body.velocity = _this.getRandomVelocity();
-	                _this._group.add(one_half);
-	                _this._group.add(other_half);
+	                _this.createAsteroid(asteroid.size - 1, asteroid.x, asteroid.y);
+	                _this.createAsteroid(asteroid.size - 1, asteroid.x, asteroid.y);
 	            }
 	        };
 	        this._game = game;
 	        this._group = new Phaser.Group(this._game);
 	    }
-	    AsteroidGenerator.prototype.connect = function () {
-	        var _this = this;
-	        this._socket = new WebSocket(gameConfig_1.GameConfig.BITCOIN_BLOCKCHAIN_SOCKET_API_URL);
-	        this._socket.onopen = function (event) {
-	            _this._socket.send(gameConfig_1.GameConfig.BITCOIN_BLOCKCHAIN_SOCKET_SUBSCRIBE_TO_TX);
-	            _this._socket.onmessage = function (message) {
-	                console.log(message);
-	            };
-	        };
-	    };
-	    AsteroidGenerator.prototype.createAsteroid = function (size) {
-	        var startingPoing = this.getRandomCoordinates();
-	        var asteroid = this._game.add.sprite(startingPoing.x, startingPoing.y, AsteroidGenerator.asteroidAssetKey[size]);
-	        ;
+	    AsteroidGenerator.prototype.createAsteroid = function (size, x, y) {
+	        var point = this.getRandomCoordinates();
+	        var asteroid;
+	        if (x && y) {
+	            asteroid = this._game.add.sprite(x, y, AsteroidGenerator.asteroidAssetKey[size]);
+	        }
+	        else {
+	            asteroid = this._game.add.sprite(point.x, point.y, AsteroidGenerator.asteroidAssetKey[size]);
+	        }
 	        asteroid.size = size;
 	        this._game.physics.enable(asteroid, Phaser.Physics.ARCADE);
 	        asteroid.body.velocity = this.getRandomVelocity();
-	        console.log(asteroid.body.velocity);
+	        asteroid.body.drag.set(40 * size);
+	        asteroid.body.minVelocity = 40;
 	        this._group.add(asteroid);
 	    };
 	    AsteroidGenerator.prototype.getRandomVelocity = function () {
@@ -250,6 +253,48 @@
 	    return Asteroid;
 	}(Phaser.Sprite));
 	exports.Asteroid = Asteroid;
+
+
+/***/ },
+/* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var gameConfig_1 = __webpack_require__(2);
+	var BlockchainFeed = (function () {
+	    function BlockchainFeed(listener) {
+	        this.listener = listener;
+	        this.connect();
+	    }
+	    BlockchainFeed.prototype.connect = function () {
+	        var _this = this;
+	        this.socket = new WebSocket(gameConfig_1.GameConfig.BITCOIN_BLOCKCHAIN_SOCKET_API_URL);
+	        this.socket.onopen = function (event) {
+	            console.log("Blockchain socket connection open!");
+	            _this.socket.send(gameConfig_1.GameConfig.BITCOIN_BLOCKCHAIN_SOCKET_SUBSCRIBE_TO_TX);
+	            console.log("Subscribed in TX events!");
+	            _this.socket.onmessage = function (message) {
+	                var tx = JSON.parse(message.data);
+	                _this.listener.onTXCreated(_this.getAmountPaid(tx));
+	            };
+	        };
+	    };
+	    BlockchainFeed.prototype.getAmountPaid = function (tx) {
+	        var inTotal = 0;
+	        for (var _i = 0, _a = tx.x.inputs; _i < _a.length; _i++) {
+	            var input = _a[_i];
+	            inTotal += input.prev_out.value;
+	        }
+	        var outTotal = 0;
+	        for (var _b = 0, _c = tx.x.out; _b < _c.length; _b++) {
+	            var out = _c[_b];
+	            outTotal += out.value;
+	        }
+	        return inTotal - outTotal;
+	    };
+	    return BlockchainFeed;
+	}());
+	exports.BlockchainFeed = BlockchainFeed;
 
 
 /***/ }
