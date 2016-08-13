@@ -1,22 +1,23 @@
 {
   "name": "blockchaingame",
   "version": "1.0.0",
-  "description": "",
+  "description": "Asteroid-like bitcoin transaction based game!",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "static": "http-server"
+    "start": "npm install;typings install;./node_modules/typescript/bin//tsc;http-server",
+    "server": "http-server"
   },
-  "author": "",
+  "author": "Antreas Pogiatzis",
   "license": "ISC",
   "dependencies": {
+    "bootstrap": "^3.3.7",
     "http-server": "^0.9.0",
-    "systemjs": "^0.19.36",
-    "ts-loader": "^0.8.2",
-    "ws": "^1.1.1"
+    "phaser": "^2.6.1",
+    "ts-loader": "^0.8.2"
   },
   "devDependencies": {
-    "retyped-websocket-tsd-ambient": "0.0.0-0",
+    "typescript": "^1.8.10",
     "webpack": "^1.13.1"
   }
 }

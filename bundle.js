@@ -56,6 +56,7 @@
 	+ fix some collision and world wrpaping issues
 	+ enchance TX visualisation with colors
 	+ link TX inputs and outputs somehow in visualisation, not just amount
+	+ add sprite animation
 	*/ 
 
 
@@ -134,10 +135,10 @@
 	    GameConfig.BITCOIN_BLOCKCHAIN_SOCKET_API_URL = "wss://ws.blockchain.info/inv";
 	    GameConfig.BITCOIN_BLOCKCHAIN_SOCKET_SUBSCRIBE_TO_TX = '{"op":"unconfirmed_sub"}';
 	    GameConfig.SPACECRAFT_INITIAL_HEALTH = 100;
-	    GameConfig.GAME_WIDTH = 1200;
-	    GameConfig.GAME_HEIGHT = 800;
-	    GameConfig.WORLD_WIDTH = 4000;
-	    GameConfig.WORLD_HEIGHT = 4000;
+	    GameConfig.GAME_WIDTH = window.innerWidth;
+	    GameConfig.GAME_HEIGHT = window.innerHeight - 54;
+	    GameConfig.WORLD_WIDTH = 5000;
+	    GameConfig.WORLD_HEIGHT = 5000;
 	    return GameConfig;
 	}());
 	exports.GameConfig = GameConfig;

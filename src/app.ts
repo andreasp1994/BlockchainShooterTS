@@ -11,4 +11,5 @@ TODO:
 + fix some collision and world wrpaping issues
 + enchance TX visualisation with colors
 + link TX inputs and outputs somehow in visualisation, not just amount
++ add sprite animation
 */

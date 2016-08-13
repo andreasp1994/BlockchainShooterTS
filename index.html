@@ -3,12 +3,27 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>Blockchain Shooter</title>
+    <title>Bitcoin TX Shooter</title>
+
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.css" type="text/css"/>
     <link rel="stylesheet" href="app.css" type="text/css" />
-    <script src="bin/js/phaser.js"></script>
+
+    <script src="node_modules/phaser/build/phaser.js"></script>
     <script src="bundle.js"></script>
 </head>
 <body>
+    <nav class="navbar navbar-inverse" role="navigation">
+        <!-- Collection of nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse wrapper">
+            <ul class="nav navbar-nav gametitle ">
+                <li class="active"><a href="#">Bitcoin TX Shooter</a></li>
+                <li><a href="about.html">About</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="about.html">Developed by Antreas Pogiatzis</a></li>
+            </ul>
+        </div>
+    </nav>
     <div id='content'></div>
 </body>
 </html>

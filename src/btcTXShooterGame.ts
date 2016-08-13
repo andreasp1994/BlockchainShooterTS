@@ -5,10 +5,9 @@ import { OnTXCreatedListener } from "./btctxsocket/onTXCreatedListener"
 import { BlockchainFeed } from "./btctxsocket/blockchainFeed"
 
 export class BtcTXShooterGame implements OnTXCreatedListener{
-    game: Phaser.Game;
-    spacecraftSpite: Phaser.Sprite;
-    weapon: Phaser.Weapon
-
+    private game: Phaser.Game;
+    private spacecraftSpite: Phaser.Sprite;
+    private weapon: Phaser.Weapon
     private asteroidGenerator : AsteroidGenerator;
     private blockchainTXFeed : BlockchainFeed;
 
@@ -65,7 +64,7 @@ export class BtcTXShooterGame implements OnTXCreatedListener{
         this.weapon.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
         this.weapon.bulletSpeed = 800;
         this.weapon.fireRate = 100;
-        this.weapon.trackSprite(this.spacecraftSpite, 0, 0, true); 
+        this.weapon.trackSprite(this.spacecraftSpite, 0, 0, true);
     }
 
     update() {
