@@ -45,99 +45,18 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var asteroidGenerator_1 = __webpack_require__(1);
-	var asteroid_1 = __webpack_require__(3);
-	var gameConfig_1 = __webpack_require__(2);
-	var blockchainFeed_1 = __webpack_require__(4);
-	var SimpleGame = (function () {
-	    function SimpleGame() {
-	        this.game = new Phaser.Game(gameConfig_1.GameConfig.GAME_WIDTH, gameConfig_1.GameConfig.GAME_HEIGHT, Phaser.AUTO, 'content', {
-	            create: this.create,
-	            preload: this.preload,
-	            update: this.update,
-	            render: this.render,
-	            onTXCreated: this.onTXCreated // Have to register the method in game state
-	        });
-	    }
-	    SimpleGame.prototype.preload = function () {
-	        //Socket TX feed
-	        this.blockchainTXFeed = new blockchainFeed_1.BlockchainFeed(this);
-	        this.game.load.image("spacecraft", "assets/ShipB.png");
-	        this.game.load.image("bullet", "assets/BulletB.png");
-	        this.game.load.image("space", "assets/space.jpg");
-	        this.game.load.image("ast_tiny", "assets/AstDebB.png");
-	        this.game.load.image("ast_small", "assets/AstSmllB.png");
-	        this.game.load.image("ast_medium", "assets/AstMedB.png");
-	        this.game.load.image("ast_large", "assets/AstLargeB.png");
-	    };
-	    SimpleGame.prototype.create = function () {
-	        this.game.world.setBounds(0, 0, 2000, 2000);
-	        this.game.physics.startSystem(Phaser.Physics.ARCADE);
-	        this.game.add.tileSprite(0, 0, 2000, 2000, "space");
-	        this.asteroidGenerator = new asteroidGenerator_1.AsteroidGenerator(this.game);
-	        this.asteroidGenerator.createAsteroid(asteroid_1.Asteroid.ASTEROID_SMALL);
-	        var image = this.game.cache.getImage("spacecraft");
-	        this.spacecraftSpite = this.game.add.sprite(this.game.width / 2 - image.width / 2, this.game.height / 2 - image.height / 2, "spacecraft");
-	        this.game.physics.enable(this.spacecraftSpite, Phaser.Physics.ARCADE);
-	        this.spacecraftSpite.body.drag.set(200);
-	        this.spacecraftSpite.body.maxVelocity.set(400);
-	        this.spacecraftSpite.scale.setTo(0.3, 0.3);
-	        this.spacecraftSpite.anchor.setTo(0.5, 0.5);
-	        this.spacecraftSpite.health = gameConfig_1.GameConfig.SPACECRAFT_INITIAL_HEALTH;
-	        this.game.camera.follow(this.spacecraftSpite);
-	        //  Creates 50 bullets, using the 'bullet' graphic
-	        this.weapon = this.game.add.weapon(50, 'bullet');
-	        this.weapon.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
-	        this.weapon.bulletSpeed = 600;
-	        this.weapon.fireRate = 100;
-	        this.weapon.trackSprite(this.spacecraftSpite, 0, 0, true);
-	    };
-	    SimpleGame.prototype.update = function () {
-	        this.spacecraftSpite.body.angularVelocity = 0;
-	        //Movement
-	        if (this.game.input.keyboard.isDown(Phaser.Keyboard.LEFT)) {
-	            this.spacecraftSpite.body.angularVelocity = -200;
-	        }
-	        else if (this.game.input.keyboard.isDown(Phaser.Keyboard.RIGHT)) {
-	            this.spacecraftSpite.body.angularVelocity = 200;
-	        }
-	        if (this.game.input.keyboard.isDown(Phaser.Keyboard.UP)) {
-	            this.game.physics.arcade.accelerationFromRotation(this.spacecraftSpite.rotation, 300, this.spacecraftSpite.body.acceleration);
-	        }
-	        else {
-	            this.spacecraftSpite.body.acceleration.set(0);
-	        }
-	        //Firing
-	        if (this.game.input.activePointer.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
-	            this.weapon.fire(this.spacecraftSpite);
-	        }
-	        //Wrap world around sprites
-	        this.game.world.wrap(this.spacecraftSpite, 0, true);
-	        this.asteroidGenerator.group.forEach(this.game.world.wrap, this.game.world, true, 0, true);
-	        //Bullets with asteroids collision
-	        this.game.physics.arcade.collide(this.asteroidGenerator.group, this.weapon.bullets, this.asteroidGenerator.divideAsteroid, null, this);
-	        //Spacecraft with asteroid collision
-	        this.game.physics.arcade.collide(this.spacecraftSpite, this.asteroidGenerator.group, null, this.damageSpacecraft, this);
-	        //Asteroids with asteroids collision
-	        this.game.physics.arcade.collide(this.asteroidGenerator.group);
-	    };
-	    SimpleGame.prototype.render = function () {
-	        this.game.debug.spriteInfo(this.spacecraftSpite, 32, 650);
-	    };
-	    SimpleGame.prototype.damageSpacecraft = function (spacecraft, asteroid) {
-	        spacecraft.health -= 5 * asteroid.size;
-	        return true;
-	    };
-	    SimpleGame.prototype.onTXCreated = function (satoshiAmount) {
-	        //create asteroid
-	        this.asteroidGenerator.createAsteroid(asteroid_1.Asteroid.ASTEROID_TINY);
-	    };
-	    return SimpleGame;
-	}());
-	exports.SimpleGame = SimpleGame;
+	var btcTXShooterGame_1 = __webpack_require__(5);
 	window.onload = function () {
-	    var game = new SimpleGame();
+	    var game = new btcTXShooterGame_1.BtcTXShooterGame();
 	};
+	/*
+	TODO:
+	+ fix astereoid spawning/division point
+	+ Somehow control intensive spawning behaviour
+	+ fix some collision and world wrpaping issues
+	+ enchance TX visualisation with colors
+	+ link TX inputs and outputs somehow in visualisation, not just amount
+	*/ 
 
 
 /***/ },
@@ -146,6 +65,7 @@
 
 	"use strict";
 	var asteroid_1 = __webpack_require__(3);
+	var gameConfig_1 = __webpack_require__(2);
 	/*
 	This class is repsonsible for creating asteroids based on the bitcoin blockchain transactions
 	*/
@@ -176,8 +96,8 @@
 	        asteroid.size = size;
 	        this._game.physics.enable(asteroid, Phaser.Physics.ARCADE);
 	        asteroid.body.velocity = this.getRandomVelocity();
-	        asteroid.body.drag.set(40 * size);
-	        asteroid.body.minVelocity = 40;
+	        asteroid.body.drag.set(20 * size);
+	        asteroid.body.minVelocity = 40; // Need fix
 	        this._group.add(asteroid);
 	    };
 	    AsteroidGenerator.prototype.getRandomVelocity = function () {
@@ -186,7 +106,7 @@
 	        return new Phaser.Point(vX, vY);
 	    };
 	    AsteroidGenerator.prototype.getRandomCoordinates = function () {
-	        return new Phaser.Point(this._game.rnd.integerInRange(0, this._game.width), this._game.rnd.integerInRange(0, this._game.height));
+	        return new Phaser.Point(this._game.rnd.integerInRange(0, gameConfig_1.GameConfig.WORLD_WIDTH), this._game.rnd.integerInRange(0, gameConfig_1.GameConfig.WORLD_HEIGHT));
 	    };
 	    Object.defineProperty(AsteroidGenerator.prototype, "group", {
 	        get: function () {
@@ -216,6 +136,8 @@
 	    GameConfig.SPACECRAFT_INITIAL_HEALTH = 100;
 	    GameConfig.GAME_WIDTH = 1200;
 	    GameConfig.GAME_HEIGHT = 800;
+	    GameConfig.WORLD_WIDTH = 4000;
+	    GameConfig.WORLD_HEIGHT = 4000;
 	    return GameConfig;
 	}());
 	exports.GameConfig = GameConfig;
@@ -256,7 +178,116 @@
 
 
 /***/ },
-/* 4 */
+/* 4 */,
+/* 5 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var asteroidGenerator_1 = __webpack_require__(1);
+	var asteroid_1 = __webpack_require__(3);
+	var gameConfig_1 = __webpack_require__(2);
+	var blockchainFeed_1 = __webpack_require__(6);
+	var BtcTXShooterGame = (function () {
+	    function BtcTXShooterGame() {
+	        this.game = new Phaser.Game(gameConfig_1.GameConfig.GAME_WIDTH, gameConfig_1.GameConfig.GAME_HEIGHT, Phaser.AUTO, 'content', {
+	            create: this.create,
+	            preload: this.preload,
+	            update: this.update,
+	            render: this.render,
+	            onTXCreated: this.onTXCreated // Have to register the method in game state
+	        });
+	    }
+	    BtcTXShooterGame.prototype.preload = function () {
+	        //Socket TX feed
+	        this.blockchainTXFeed = new blockchainFeed_1.BlockchainFeed(this);
+	        //Graphic assets
+	        this.game.load.image("spacecraft", "assets/ShipB.png");
+	        this.game.load.image("bullet", "assets/BulletB.png");
+	        this.game.load.image("space", "assets/space.jpg");
+	        this.game.load.image("ast_tiny", "assets/AstDebB.png");
+	        this.game.load.image("ast_small", "assets/AstSmllB.png");
+	        this.game.load.image("ast_medium", "assets/AstMedB.png");
+	        this.game.load.image("ast_large", "assets/AstLargeB.png");
+	    };
+	    BtcTXShooterGame.prototype.create = function () {
+	        this.game.world.setBounds(0, 0, gameConfig_1.GameConfig.WORLD_WIDTH, gameConfig_1.GameConfig.WORLD_HEIGHT);
+	        this.game.physics.startSystem(Phaser.Physics.ARCADE);
+	        this.game.add.tileSprite(0, 0, gameConfig_1.GameConfig.WORLD_WIDTH, gameConfig_1.GameConfig.WORLD_HEIGHT, "space");
+	        this.asteroidGenerator = new asteroidGenerator_1.AsteroidGenerator(this.game);
+	        this.asteroidGenerator.createAsteroid(asteroid_1.Asteroid.ASTEROID_SMALL);
+	        var image = this.game.cache.getImage("spacecraft");
+	        this.spacecraftSpite = this.game.add.sprite(this.game.width / 2 - image.width / 2, this.game.height / 2 - image.height / 2, "spacecraft");
+	        this.game.physics.enable(this.spacecraftSpite, Phaser.Physics.ARCADE);
+	        this.spacecraftSpite.body.drag.set(200);
+	        this.spacecraftSpite.body.maxVelocity.set(400);
+	        this.spacecraftSpite.scale.setTo(0.3, 0.3);
+	        this.spacecraftSpite.anchor.setTo(0.5, 0.5);
+	        this.spacecraftSpite.health = gameConfig_1.GameConfig.SPACECRAFT_INITIAL_HEALTH;
+	        this.game.camera.follow(this.spacecraftSpite);
+	        //  Creates 50 bullets, using the 'bullet' graphic
+	        this.weapon = this.game.add.weapon(50, 'bullet');
+	        this.weapon.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
+	        this.weapon.bulletSpeed = 800;
+	        this.weapon.fireRate = 100;
+	        this.weapon.trackSprite(this.spacecraftSpite, 0, 0, true);
+	    };
+	    BtcTXShooterGame.prototype.update = function () {
+	        this.spacecraftSpite.body.angularVelocity = 0;
+	        //Movement
+	        if (this.game.input.keyboard.isDown(Phaser.Keyboard.LEFT)) {
+	            this.spacecraftSpite.body.angularVelocity = -200;
+	        }
+	        else if (this.game.input.keyboard.isDown(Phaser.Keyboard.RIGHT)) {
+	            this.spacecraftSpite.body.angularVelocity = 200;
+	        }
+	        if (this.game.input.keyboard.isDown(Phaser.Keyboard.UP)) {
+	            this.game.physics.arcade.accelerationFromRotation(this.spacecraftSpite.rotation, 300, this.spacecraftSpite.body.acceleration);
+	        }
+	        else {
+	            this.spacecraftSpite.body.acceleration.set(0);
+	        }
+	        //Firing
+	        if (this.game.input.activePointer.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
+	            this.weapon.fire(this.spacecraftSpite);
+	        }
+	        //Wrap world around sprites
+	        this.game.world.wrap(this.spacecraftSpite, 0, true);
+	        this.asteroidGenerator.group.forEach(this.game.world.wrap, this.game.world, true, 0, true);
+	        //Bullets with asteroids collision
+	        this.game.physics.arcade.collide(this.asteroidGenerator.group, this.weapon.bullets, this.asteroidGenerator.divideAsteroid, null, this);
+	        //Spacecraft with asteroid collision
+	        this.game.physics.arcade.collide(this.spacecraftSpite, this.asteroidGenerator.group, null, this.damageSpacecraft, this);
+	        //Asteroids with asteroids collision
+	        this.game.physics.arcade.collide(this.asteroidGenerator.group);
+	    };
+	    BtcTXShooterGame.prototype.render = function () {
+	        this.game.debug.spriteInfo(this.spacecraftSpite, 32, 650);
+	    };
+	    BtcTXShooterGame.prototype.damageSpacecraft = function (spacecraft, asteroid) {
+	        spacecraft.health -= 5 * asteroid.size;
+	        return true;
+	    };
+	    BtcTXShooterGame.prototype.onTXCreated = function (satoshiAmount) {
+	        if (satoshiAmount < 10000) {
+	            this.asteroidGenerator.createAsteroid(asteroid_1.Asteroid.ASTEROID_TINY);
+	        }
+	        else if (satoshiAmount < 50000) {
+	            this.asteroidGenerator.createAsteroid(asteroid_1.Asteroid.ASTEROID_SMALL);
+	        }
+	        else if (satoshiAmount < 100000) {
+	            this.asteroidGenerator.createAsteroid(asteroid_1.Asteroid.ASTEROID_MEDIUM);
+	        }
+	        else {
+	            this.asteroidGenerator.createAsteroid(asteroid_1.Asteroid.ASTEROID_LARGE);
+	        }
+	    };
+	    return BtcTXShooterGame;
+	}());
+	exports.BtcTXShooterGame = BtcTXShooterGame;
+
+
+/***/ },
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";

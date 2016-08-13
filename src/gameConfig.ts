@@ -7,4 +7,7 @@ export class GameConfig {
 
     public static GAME_WIDTH : number = 1200;
     public static GAME_HEIGHT : number = 800;
+
+    public static WORLD_WIDTH : number = 4000;
+    public static WORLD_HEIGHT : number = 4000;
 }

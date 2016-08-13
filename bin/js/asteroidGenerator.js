@@ -1,5 +1,6 @@
 "use strict";
 var asteroid_1 = require('./asteroid');
+var gameConfig_1 = require('./gameConfig');
 /*
 This class is repsonsible for creating asteroids based on the bitcoin blockchain transactions
 */
@@ -30,7 +31,7 @@ var AsteroidGenerator = (function () {
         asteroid.size = size;
         this._game.physics.enable(asteroid, Phaser.Physics.ARCADE);
         asteroid.body.velocity = this.getRandomVelocity();
-        asteroid.body.drag.set(40 * size);
+        asteroid.body.drag.set(20 * size);
         asteroid.body.minVelocity = 40;
         this._group.add(asteroid);
     };
@@ -40,7 +41,7 @@ var AsteroidGenerator = (function () {
         return new Phaser.Point(vX, vY);
     };
     AsteroidGenerator.prototype.getRandomCoordinates = function () {
-        return new Phaser.Point(this._game.rnd.integerInRange(0, this._game.width), this._game.rnd.integerInRange(0, this._game.height));
+        return new Phaser.Point(this._game.rnd.integerInRange(0, gameConfig_1.GameConfig.WORLD_WIDTH), this._game.rnd.integerInRange(0, gameConfig_1.GameConfig.WORLD_HEIGHT));
     };
     Object.defineProperty(AsteroidGenerator.prototype, "group", {
         get: function () {

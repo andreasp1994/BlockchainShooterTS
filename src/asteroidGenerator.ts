@@ -1,5 +1,6 @@
-import { SimpleGame } from './app'
+import { BtcTXShooterGame } from './btcTXShooterGame'
 import { Asteroid } from './asteroid'
+import { GameConfig } from './gameConfig'
 
 /*
 This class is repsonsible for creating asteroids based on the bitcoin blockchain transactions
@@ -30,8 +31,8 @@ export class AsteroidGenerator {
         asteroid.size = size;
         this._game.physics.enable(asteroid, Phaser.Physics.ARCADE);
         asteroid.body.velocity = this.getRandomVelocity();
-        asteroid.body.drag.set(40*size);
-        asteroid.body.minVelocity = 40;
+        asteroid.body.drag.set(20*size);
+        asteroid.body.minVelocity = 40; // Need fix
         this._group.add(asteroid);
     }
 
@@ -53,7 +54,7 @@ export class AsteroidGenerator {
     }
 
     private getRandomCoordinates() : Phaser.Point {
-        return new Phaser.Point(this._game.rnd.integerInRange(0,this._game.width), this._game.rnd.integerInRange(0, this._game.height));
+        return new Phaser.Point(this._game.rnd.integerInRange(0,GameConfig.WORLD_WIDTH), this._game.rnd.integerInRange(0, GameConfig.WORLD_HEIGHT));
     } 
 
     get group(): Phaser.Group {

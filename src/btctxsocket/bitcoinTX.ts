@@ -1,3 +1,6 @@
+/*
+The BitcoinTX interface is defined based on the Bitcoin TX structure in Socket API documentation.
+*/
 export interface BitcoinTX{
     op : string;
     x : Transaction;

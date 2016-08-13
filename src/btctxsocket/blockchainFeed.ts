@@ -1,5 +1,5 @@
 import { OnTXCreatedListener } from "./onTXCreatedListener"
-import { GameConfig } from "./gameConfig"
+import { GameConfig } from "./../gameConfig"
 import { BitcoinTX } from "./bitcoinTX"
 
 export class BlockchainFeed {
@@ -35,7 +35,4 @@ export class BlockchainFeed {
         }
         return inTotal - outTotal;
     }
-
-
-
 }

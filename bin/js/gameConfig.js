@@ -7,6 +7,8 @@ var GameConfig = (function () {
     GameConfig.SPACECRAFT_INITIAL_HEALTH = 100;
     GameConfig.GAME_WIDTH = 1200;
     GameConfig.GAME_HEIGHT = 800;
+    GameConfig.WORLD_WIDTH = 4000;
+    GameConfig.WORLD_HEIGHT = 4000;
     return GameConfig;
 }());
 exports.GameConfig = GameConfig;
